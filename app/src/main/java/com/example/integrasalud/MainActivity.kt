@@ -32,6 +32,8 @@ sealed interface AppScreen {
     data class Profile(val user: UserProfile) : AppScreen
     data class DoctorHome(val user: UserProfile) : AppScreen
     data class PatientDetail(val doctor: UserProfile, val patient: UserProfile) : AppScreen
+    data class RecommendedFoods(val user: UserProfile) : AppScreen
+    data class RestrictedFoods(val user: UserProfile) : AppScreen
 }
 
 @PreviewScreenSizes
@@ -78,6 +80,8 @@ fun IntegraSaludApp() {
                 PatientHomeScreen(
                     user = screen.user,
                     onNavigateToProfile = { currentScreen = AppScreen.Profile(screen.user) },
+                    onNavigateToRecommendedFoods = { currentScreen = AppScreen.RecommendedFoods(screen.user) },
+                    onNavigateToRestrictedFoods = { currentScreen = AppScreen.RestrictedFoods(screen.user) },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -122,9 +126,26 @@ fun IntegraSaludApp() {
         }
         is AppScreen.PatientDetail -> {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                PatientDetailScreen(
+                PatientClinicalDetailScreen(
                     patient = screen.patient,
+                    doctor = screen.doctor,
                     onBack = { currentScreen = AppScreen.DoctorHome(screen.doctor) },
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+        is AppScreen.RecommendedFoods -> {
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                RecommendedFoodsScreen(
+                    onBack = { currentScreen = AppScreen.PatientHome(screen.user) },
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+        is AppScreen.RestrictedFoods -> {
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                RestrictedFoodsScreen(
+                    onBack = { currentScreen = AppScreen.PatientHome(screen.user) },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -152,7 +173,9 @@ fun GreetingPreview() {
                 tieneOtraEnfermedad = false,
                 otraEnfermedadDetalle = ""
             ),
-            onNavigateToProfile = {}
+            onNavigateToProfile = {},
+            onNavigateToRecommendedFoods = {},
+            onNavigateToRestrictedFoods = {}
         )
     }
 }

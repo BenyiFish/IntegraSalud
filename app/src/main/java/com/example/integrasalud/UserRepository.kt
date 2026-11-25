@@ -10,6 +10,17 @@ data class Receta(
     val dosisMg: String
 )
 
+data class ExamenItem(
+    val titulo: String,
+    val subtitulo: String,
+    val valor: String,
+    val unidad: String,
+    val etapa: String,
+    val fecha: String,
+    val estado: String,
+    val archivoUri: String = ""
+)
+
 data class UserProfile(
     val nombres: String,
     val apellidos: String,
@@ -25,7 +36,8 @@ data class UserProfile(
     val tieneOtraEnfermedad: Boolean,
     val otraEnfermedadDetalle: String,
     val avatar: String = "👤",
-    val recetas: List<Receta> = emptyList()
+    val recetas: List<Receta> = emptyList(),
+    val examenes: List<ExamenItem> = emptyList()
 ) {
     val nombreCompleto: String
         get() = "$nombres $apellidos"
@@ -67,7 +79,19 @@ object UserRepository {
                 genero = "Masculino", fechaNacimiento = "15 - 04 - 1972", peso = 76.0,
                 rol = "PACIENTE", antecedenteFamiliarRenal = "No",
                 tieneHipertension = true, tieneDiabetes = false, tieneOtraEnfermedad = false, otraEnfermedadDetalle = "", avatar = "👤",
-                recetas = listOf(Receta("Losartán", "Cada 24 horas", "50 mg"))
+                recetas = listOf(Receta("Losartán", "Cada 24 horas", "50 mg")),
+                examenes = listOf(
+                    ExamenItem(
+                        titulo = "Función renal",
+                        subtitulo = "Tasa de filtración glomerular (TFG)",
+                        valor = "54",
+                        unidad = "mL/min/1,73 m²",
+                        etapa = "Etapa G3a",
+                        fecha = "Fecha no disponible",
+                        estado = "Revisado",
+                        archivoUri = ""
+                    )
+                )
             ),
             UserProfile(
                 nombres = "Ana Sofía", apellidos = "Torres",
@@ -75,7 +99,19 @@ object UserRepository {
                 genero = "Femenino", fechaNacimiento = "20 - 08 - 1985", peso = 62.5,
                 rol = "PACIENTE", antecedenteFamiliarRenal = "Sí",
                 tieneHipertension = false, tieneDiabetes = true, tieneOtraEnfermedad = false, otraEnfermedadDetalle = "", avatar = "👩",
-                recetas = listOf(Receta("Metformina", "Cada 12 horas", "850 mg"))
+                recetas = listOf(Receta("Metformina", "Cada 12 horas", "850 mg")),
+                examenes = listOf(
+                    ExamenItem(
+                        titulo = "Función renal",
+                        subtitulo = "Tasa de filtración glomerular (TFG)",
+                        valor = "68",
+                        unidad = "mL/min/1,73 m²",
+                        etapa = "Etapa G2",
+                        fecha = "Fecha no disponible",
+                        estado = "Revisado",
+                        archivoUri = ""
+                    )
+                )
             ),
             UserProfile(
                 nombres = "Luis Fernando", apellidos = "Gómez",
@@ -125,6 +161,24 @@ object UserRepository {
                     )
                 }
 
+                val examenesArray = obj.optJSONArray("examenes") ?: JSONArray()
+                val examenesList = mutableListOf<ExamenItem>()
+                for (j in 0 until examenesArray.length()) {
+                    val eObj = examenesArray.getJSONObject(j)
+                    examenesList.add(
+                        ExamenItem(
+                            titulo = eObj.optString("titulo"),
+                            subtitulo = eObj.optString("subtitulo"),
+                            valor = eObj.optString("valor"),
+                            unidad = eObj.optString("unidad"),
+                            etapa = eObj.optString("etapa"),
+                            fecha = eObj.optString("fecha"),
+                            estado = eObj.optString("estado", "Revisado"),
+                            archivoUri = eObj.optString("archivoUri", "")
+                        )
+                    )
+                }
+
                 users.add(
                     UserProfile(
                         nombres = obj.optString("nombres"),
@@ -141,7 +195,8 @@ object UserRepository {
                         tieneOtraEnfermedad = obj.optBoolean("tieneOtraEnfermedad", false),
                         otraEnfermedadDetalle = obj.optString("otraEnfermedadDetalle", ""),
                         avatar = obj.optString("avatar", "👤"),
-                        recetas = recetasList
+                        recetas = recetasList,
+                        examenes = examenesList
                     )
                 )
             }
@@ -228,6 +283,22 @@ object UserRepository {
                     recetasArr.put(rObj)
                 }
                 put("recetas", recetasArr)
+
+                val examenesArr = JSONArray()
+                for (examen in user.examenes) {
+                    val eObj = JSONObject().apply {
+                        put("titulo", examen.titulo)
+                        put("subtitulo", examen.subtitulo)
+                        put("valor", examen.valor)
+                        put("unidad", examen.unidad)
+                        put("etapa", examen.etapa)
+                        put("fecha", examen.fecha)
+                        put("estado", examen.estado)
+                        put("archivoUri", examen.archivoUri)
+                    }
+                    examenesArr.put(eObj)
+                }
+                put("examenes", examenesArr)
             }
             jsonArray.put(obj)
         }
